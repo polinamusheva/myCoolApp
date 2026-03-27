@@ -2,6 +2,7 @@ package gitHubApi.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import gitHubApi.DTOs.ResponseDTO;
@@ -24,6 +25,9 @@ public class GitHubClient {
         ResponseDTO currentUser = restClient.get()
                 .uri(uri)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, (req, res) -> {
+                    throw new RuntimeException("Request failed: " + res.getStatusCode());
+                })
                 .body(ResponseDTO.class);
         log.info("Successfully retrieved {} endpoint", userPath);
         return currentUser;
