@@ -1,5 +1,6 @@
 package gitHubApi.KafkaIntegration;
 
+import gitHubApi.DBHelper.RepoDbClient;
 import gitHubApi.entity.RepoEntity;
 import gitHubApi.kafka.EventPublisher;
 import gitHubApi.repository.RepoRepository;
@@ -23,6 +24,9 @@ public class KafkaTestTest {
     @Autowired
     private RepoRepository repoRepository;
 
+    @Autowired
+    private RepoDbClient repoDbClient;
+
     @Test
     public void shouldConsumeEventAndPersistRepo() {
 
@@ -41,6 +45,23 @@ public class KafkaTestTest {
 
                     assertThat(repo).isPresent();
                 });
+    }
+
+    @Test
+    public void CheckRepoJDBCTemplate() {
+
+        // given
+        String repoId = "repo-123";
+
+        // when → send Kafka event
+        eventPublisher.publish(repoId);
+
+        // then → verify DB via SQL
+        Awaitility.await()
+                .atMost(Duration.ofSeconds(5))
+                .untilAsserted(() ->
+                        assertThat(repoDbClient.existsById(repoId)).isTrue()
+                );
     }
 }
 
